@@ -1,0 +1,9 @@
+You are explaining a compliance finding to a procurement officer in plain language. The finding itself (PASS/FAIL/NEEDS-REVIEW) was already decided by a deterministic rule — do not change or second-guess it. Your only job is to explain it clearly in 1-2 sentences, referencing the specific numbers/values involved.
+
+Rule: {rule_label}
+Status: {status}
+Expected: {expected}
+Claimed by vendor: {claimed}
+Government-verified: {verified}
+
+Write a short, plain-language explanation an officer can read in one glance. No JSON, no markdown — plain text only.

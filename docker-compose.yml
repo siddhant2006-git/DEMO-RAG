@@ -1,0 +1,176 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tenderguard-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tenderguard
+      POSTGRES_PASSWORD: tenderguard
+      POSTGRES_DB: tenderguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tenderguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: tenderguard-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tenderguard-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot: pulls the model named by OLLAMA_MODEL before api/worker start, so
+  # the first extraction call after `docker compose up` doesn't fail because
+  # nobody remembered to `docker exec ollama ollama pull ...` by hand.
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: tenderguard-ollama-pull
+    env_file:
+      - ./backend/.env
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["sh", "-c"]
+    # $$ so docker-compose leaves the expansion to the container's shell at
+    # runtime (using OLLAMA_MODEL from the env_file above) instead of trying
+    # to interpolate it itself from the host's shell/.env at parse time.
+    command: ["ollama pull \"$${OLLAMA_MODEL:-llama3.1:8b}\""]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  # One-shot: applies Alembic migrations against Postgres before api/worker
+  # start, so a fresh `docker compose up` doesn't leave the API running
+  # against a schema-less database.
+  migrate:
+    build:
+      context: ./backend
+    container_name: tenderguard-migrate
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://tenderguard:tenderguard@postgres:5432/tenderguard
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: alembic upgrade head
+
+  api:
+    build:
+      context: ./backend
+    container_name: tenderguard-api
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://tenderguard:tenderguard@postgres:5432/tenderguard
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE_URL: http://ollama:11434
+      # ./data is mounted at /app/data here, not as a sibling of /app the way
+      # project/data sits next to project/backend natively — override the
+      # project-root-relative defaults from backend/.env accordingly.
+      UPLOAD_DIR: /app/data/uploads
+      VECTORSTORE_DIR: /app/data/vectorstore
+      MOCK_PORTAL_DIR: /app/data/mock_portals
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      ollama-pull:
+        condition: service_completed_successfully
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ./backend
+    container_name: tenderguard-worker
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://tenderguard:tenderguard@postgres:5432/tenderguard
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE_URL: http://ollama:11434
+      UPLOAD_DIR: /app/data/uploads
+      VECTORSTORE_DIR: /app/data/vectorstore
+      MOCK_PORTAL_DIR: /app/data/mock_portals
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      ollama-pull:
+        condition: service_completed_successfully
+    command: celery -A app.workers.celery_app worker --loglevel=info
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: tenderguard-frontend
+    restart: unless-stopped
+    environment:
+      # Consumed by vite.config.js's dev-server proxy — routes same-origin
+      # /api/* browser calls to the api container over the Docker network.
+      VITE_PROXY_TARGET: http://api:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  nginx:
+    image: nginx:alpine
+    container_name: tenderguard-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - frontend
+
+volumes:
+  pgdata:
+  ollama_data:

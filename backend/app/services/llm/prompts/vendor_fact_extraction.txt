@@ -1,0 +1,19 @@
+You are extracting a vendor's claimed facts from their tender bid document, so they can be checked against government records.
+
+Rules:
+- Only extract facts that are actually stated in the text below. Never invent or infer.
+- For every fact, "source_snippet" MUST be an exact, verbatim quote copied from the text below.
+- "fact_key" must be one of this fixed vocabulary when the fact matches it (use the exact dotted key):
+  financials.avg_annual_turnover, financials.emd_submitted, gst.status, identity.gstin, identity.pan,
+  udyam.valid, udyam.category, experience.years, experience.similar_work_value, certification.iso_certified,
+  debarment.listed, bid.claims_msme_benefit
+  If a stated fact doesn't match any key above, skip it rather than inventing a new key.
+- "raw_value" is the verbatim value as written (e.g. "Rs. 6,20,00,000", "27AAAPL1234C1Z5", "8 years") — do not normalize or convert it yourself.
+- Output strictly valid JSON matching the schema. No prose, no markdown fences, no commentary.
+
+Bid text (page {page_number}):
+"""
+{page_text}
+"""
+
+Return JSON: {{"facts": [{{"fact_key": "...", "raw_value": "...", "source_snippet": "..."}}]}}
