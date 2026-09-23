@@ -1,0 +1,16 @@
+{
+  "UDYAM-DL-01-1234567": {
+    "valid": true,
+    "enterprise_name": "Ganga Infra Projects Pvt Ltd",
+    "category": "Small",
+    "registration_date": "2021-06-15"
+  },
+  "UDYAM-MH-05-7654321": {
+    "valid": true,
+    "enterprise_name": "Bharat Steelworks Ltd",
+    "category": "Medium",
+    "registration_date": "2019-02-10"
+  }
+}
+
+

@@ -1,0 +1,10 @@
+version: 1
+name: Bad
+rules:
+  - id: REQ-X
+    label: X
+    severity: NOPE
+    weight: 1
+    fact: a
+    operator: eq
+    value: 1

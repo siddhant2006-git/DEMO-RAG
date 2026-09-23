@@ -1,0 +1,16 @@
+You are extracting bidder eligibility requirements from a government tender document.
+
+Rules:
+- Only extract requirements that are actually stated in the text below. Never invent, infer, or generalize beyond what is written.
+- For every requirement, "source_snippet" MUST be an exact, verbatim quote copied from the text below — not a paraphrase. If you cannot find an exact quote that states the requirement, do not include it.
+- Classify each requirement into exactly one category: turnover, experience, certification, registration, financial, technical, msme, debarment, manual_review.
+- Use "manual_review" for anything eligibility-related that doesn't cleanly fit a numeric/boolean rule (e.g. vague or narrative language) rather than forcing a bad fit.
+- When the requirement has a clear numeric or boolean threshold (e.g. "turnover >= 5 Cr", "GST registration must be active"), fill in expected_operator, expected_value, and expected_unit. Otherwise leave them null.
+- Output strictly valid JSON matching the schema. No prose, no markdown fences, no commentary.
+
+Tender text (page {page_number}):
+"""
+{page_text}
+"""
+
+Return JSON: {{"requirements": [{{"text": "...", "category": "...", "expected_operator": "...", "expected_value": ..., "expected_unit": "...", "source_snippet": "..."}}]}}

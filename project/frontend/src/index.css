@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Direction: institutional, not startup. This is a tool a procurement officer
+   defends in an audit, so the palette is a deep navy brand over warm neutrals,
+   with status colour reserved exclusively for verdicts (PASS/FAIL/REVIEW).
+   Nothing decorative uses emerald/red/amber — that way colour always means
+   something, per README's "judges want proof, not motion".
+
+   No webfont is loaded on purpose: the demo has to run with the wifi off.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-brand-50: #edf8f7;
+  --color-brand-100: #d4eeec;
+  --color-brand-200: #adddda;
+  --color-brand-300: #7bc4c0;
+  --color-brand-400: #4ca7a6;
+  --color-brand-500: #2d8588;
+  --color-brand-600: #236e73;
+  --color-brand-700: #1e5b61;
+  --color-brand-800: #18474f;
+  --color-brand-900: #12363f;
+  --color-brand-950: #0b242c;
+
+  /* Page ground — very slightly warm, so white cards read as raised */
+  --color-ground: #f5f3ee;
+
+  --font-sans: "Avenir Next", "Segoe UI", sans-serif;
+
+  /* Tabular figures for money/score columns */
+  --font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Consolas,
+    "Liberation Mono", monospace;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-slate-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background-image:
+    linear-gradient(rgba(24, 71, 79, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 71, 79, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Numbers that need to line up in columns (scores, turnover, counts) */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Consistent, visible keyboard focus everywhere — officers tab through forms */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200/80 bg-white shadow-sm;
+    box-shadow:
+      0 12px 32px rgba(24, 71, 79, 0.06),
+      0 2px 5px rgba(24, 71, 79, 0.04);
+  }
+
+  .card-pad {
+    @apply rounded-xl border border-slate-200/80 bg-white p-6 shadow-sm;
+    box-shadow:
+      0 12px 32px rgba(24, 71, 79, 0.06),
+      0 2px 5px rgba(24, 71, 79, 0.04);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm
+           font-semibold tracking-[0.01em] transition-all duration-150 disabled:cursor-not-allowed
+           disabled:opacity-45 bg-brand-800 text-white shadow-sm hover:bg-brand-700
+           active:bg-brand-900 disabled:hover:bg-brand-800;
+    box-shadow: 0 4px 10px rgba(24, 71, 79, 0.16);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm
+           font-semibold transition-all duration-150 disabled:cursor-not-allowed
+           disabled:opacity-45 border border-slate-300 bg-white text-slate-700 shadow-sm
+           hover:border-slate-400 hover:bg-slate-50 disabled:hover:bg-white;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm
+           font-semibold transition-all duration-150 disabled:cursor-not-allowed
+           disabled:opacity-45 text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm
+           text-slate-900 shadow-sm transition-all placeholder:text-slate-400
+           hover:border-slate-400 focus:border-brand-500 focus:outline-none
+           focus:ring-2 focus:ring-brand-500/20 disabled:bg-slate-50
+           disabled:text-slate-400;
+    min-height: 2.7rem;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .th {
+    @apply px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider
+           text-slate-500;
+  }
+
+  .td {
+    @apply px-4 py-3 text-sm text-slate-700;
+  }
+
+  /* Page heading block */
+  .page-title {
+    @apply text-[30px] font-semibold tracking-[-0.02em] text-slate-900;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  .page-sub {
+    @apply mt-1.5 text-sm leading-relaxed text-slate-500;
+  }
+}
