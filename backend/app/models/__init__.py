@@ -1,4 +1,5 @@
 from app.models.audit_log import AuditLog
+from app.models.auth import PasswordResetToken, RefreshSession, User, VerificationToken
 from app.models.document import Document, DocumentPage
 from app.models.finding import Evidence, Finding
 from app.models.requirement import Requirement
@@ -8,6 +9,10 @@ from app.models.verification import VerificationResult
 
 __all__ = [
     "AuditLog",
+    "User",
+    "RefreshSession",
+    "VerificationToken",
+    "PasswordResetToken",
     "Document",
     "DocumentPage",
     "Evidence",

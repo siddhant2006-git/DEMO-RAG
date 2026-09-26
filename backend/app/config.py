@@ -22,7 +22,9 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
 
-    database_url: str = "postgresql+psycopg://tenderguard:tenderguard@localhost:5432/tenderguard"
+    database_url: str = (
+        "postgresql+psycopg://tenderguard:tenderguard@localhost:5432/tenderguard"
+    )
 
     redis_url: str = "redis://localhost:6379/0"
 
@@ -52,6 +54,24 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173"
 
+    jwt_secret: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    access_token_minutes: int = 15
+    refresh_token_days: int = 30
+    password_reset_minutes: int = 30
+    email_verification_hours: int = 24
+    auth_cookie_secure: bool = False
+    auth_cookie_domain: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str = "security@tenderguard.local"
+    frontend_url: str = "http://localhost:5173"
+    rate_limit_window_seconds: int = 60
+    rate_limit_login_attempts: int = 5
+    rate_limit_registration_attempts: int = 3
+
     @field_validator("upload_dir", "vectorstore_dir", "mock_portal_dir", mode="after")
     @classmethod
     def _resolve_data_dir(cls, v: str) -> str:
@@ -75,7 +95,7 @@ class Settings(BaseSettings):
         prefix = "sqlite:///"
         if not self.database_url.startswith(prefix):
             return self.database_url
-        raw_path = self.database_url[len(prefix):]
+        raw_path = self.database_url[len(prefix) :]
         if not raw_path or Path(raw_path).is_absolute():
             return self.database_url
         return prefix + str((PROJECT_ROOT / raw_path).resolve())

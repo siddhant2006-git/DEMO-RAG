@@ -1,5 +1,6 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useSession } from '../../store/SessionContext'
+import { useAuth } from '../../store/AuthContext'
 import { BuildingIcon, CheckIcon, LockIcon, RefreshIcon, ShieldIcon } from './icons'
 
 const STEPS = [
@@ -37,6 +38,7 @@ function StepBadge({ state, index }) {
 
 export default function NavBar() {
   const session = useSession()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -66,6 +68,11 @@ export default function NavBar() {
           </div>
         </div>
 
+        <div className="flex items-center gap-3">
+          <span className="hidden text-xs text-slate-500 md:inline">{user?.email}</span>
+          <button type="button" onClick={logout} className="btn-ghost text-xs">Sign out</button>
+        </div>
+
         <nav className="flex items-center" aria-label="Pipeline steps">
           {STEPS.map((step, i) => {
             const unlocked = step.isUnlocked(session)
@@ -93,11 +100,10 @@ export default function NavBar() {
                   <NavLink
                     to={step.to}
                     end={step.to === '/'}
-                    className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all sm:px-3 ${
-                      isActive
+                    className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all sm:px-3 ${isActive
                         ? 'bg-brand-800 text-white shadow-sm'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     {inner}
                   </NavLink>

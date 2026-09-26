@@ -1,6 +1,6 @@
 # API reference
 
-Base URL: `http://localhost:8000/api/v1`. Interactive docs (OpenAPI/Swagger)
+Base URL: `http://localhost:8001/api/v1`. Interactive docs (OpenAPI/Swagger)
 are always at `http://localhost:8000/docs`. All responses are JSON; errors
 use the envelope `{code, message, detail}`.
 

@@ -2,7 +2,11 @@ import httpx
 
 from app.config import get_settings
 from app.core.logging import get_logger
-from app.services.verification.base import PortalAdapter, VerificationOutcome
+from app.services.verification.base import (
+    PortalAdapter,
+    VerificationOutcome,
+    verify_portal_response,
+)
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -21,7 +25,11 @@ class GstAdapter(PortalAdapter):
     def verify(self, gstin: str = "", **_: str) -> VerificationOutcome:
         if not settings.gst_api_base_url or not settings.gst_api_key:
             logger.warning("gst_adapter_not_configured")
-            return VerificationOutcome(portal=self.portal_name, status="DOWN", raw_response={"reason": "not_configured"})
+            return VerificationOutcome(
+                portal=self.portal_name,
+                status="DOWN",
+                raw_response={"reason": "not_configured"},
+            )
 
         try:
             response = httpx.get(
@@ -29,13 +37,19 @@ class GstAdapter(PortalAdapter):
                 headers={"Authorization": f"Bearer {settings.gst_api_key}"},
                 timeout=10.0,
             )
-            if response.status_code == 404:
-                return VerificationOutcome(portal=self.portal_name, status="NOT_FOUND")
-            response.raise_for_status()
-            data = response.json()
+            result = verify_portal_response(response)
+            if result.status != "UP":
+                return VerificationOutcome(
+                    portal=self.portal_name,
+                    status=result.status,
+                    raw_response={"reason": result.reason},
+                )
+            data = result.data
         except httpx.HTTPError as exc:
             logger.warning("gst_adapter_request_failed", error=str(exc))
-            return VerificationOutcome(portal=self.portal_name, status="DOWN", raw_response={"error": str(exc)})
+            return VerificationOutcome(
+                portal=self.portal_name, status="DOWN", raw_response={"error": str(exc)}
+            )
 
         return VerificationOutcome(
             portal=self.portal_name,
